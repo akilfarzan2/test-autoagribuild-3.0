@@ -91,14 +91,21 @@ const CustomerDeclaration: React.FC<CustomerDeclarationProps> = ({
                 </h4>
                 <button
                   type="button"
-                  onClick={clearSignature}
-                  className="flex items-center px-3 py-1.5 text-sm text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors duration-200"
-                >
-                  <RotateCcw className="w-4 h-4 mr-1" />
-                  Clear
-                </button>
+            {jobCardFormData.customer_signature ? (
+              // Display saved signature
+              <div className="bg-white border-2 border-gray-300 rounded-lg p-4">
+                <img
+                  src={jobCardFormData.customer_signature}
+                  alt="Customer Signature"
+                  className="w-full h-[200px] object-contain border border-gray-200 rounded-md bg-white"
+                  style={{ maxWidth: '100%', height: '200px' }}
+                />
+                <p className="text-xs text-gray-500 mt-2 text-center">
+                  Saved customer signature - Click "Clear" to create a new signature
+                </p>
               </div>
-              
+            ) : (
+              // Display signature canvas for new signature
               <div className="bg-white border-2 border-dashed border-gray-300 rounded-lg p-4">
                 <SignatureCanvas
                   ref={signatureRef}
@@ -106,6 +113,15 @@ const CustomerDeclaration: React.FC<CustomerDeclarationProps> = ({
                   canvasProps={{
                     width: 500,
                     height: 200,
+                    className: 'signature-canvas w-full h-full border border-gray-200 rounded-md',
+                    style: { width: '100%', height: '200px' }
+                  }}
+                />
+                <p className="text-xs text-gray-500 mt-2 text-center">
+                  Please sign above using your mouse, trackpad, or touch screen
+                </p>
+              </div>
+            )}
                     className: 'signature-canvas w-full h-full border border-gray-200 rounded-md',
                     style: { width: '100%', height: '200px' }
                   }}

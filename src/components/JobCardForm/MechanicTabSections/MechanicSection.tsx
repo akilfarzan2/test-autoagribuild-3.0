@@ -187,21 +187,37 @@ const MechanicSection: React.FC<MechanicSectionProps> = ({
                   </button>
                 </div>
                 
-                <div className="bg-white border-2 border-dashed border-gray-300 rounded-lg p-2">
-                  <SignatureCanvas
-                    ref={signatureRef}
-                    onEnd={handleSignatureEnd}
-                    canvasProps={{
-                      width: 300,
-                      height: 120,
-                      className: 'signature-canvas w-full h-full border border-gray-200 rounded-md',
-                      style: { width: '100%', height: '120px' }
-                    }}
-                  />
-                  <p className="text-xs text-gray-500 mt-1 text-center">
-                    Supervisor signature for work completion approval
-                  </p>
-                </div>
+                {jobCardFormData.supervisor_signature ? (
+                  // Display saved signature
+                  <div className="bg-white border-2 border-gray-300 rounded-lg p-2">
+                    <img
+                      src={jobCardFormData.supervisor_signature}
+                      alt="Supervisor Signature"
+                      className="w-full h-[120px] object-contain border border-gray-200 rounded-md bg-white"
+                      style={{ maxWidth: '100%', height: '120px' }}
+                    />
+                    <p className="text-xs text-gray-500 mt-1 text-center">
+                      Saved supervisor signature - Click "Clear" to create a new signature
+                    </p>
+                  </div>
+                ) : (
+                  // Display signature canvas for new signature
+                  <div className="bg-white border-2 border-dashed border-gray-300 rounded-lg p-2">
+                    <SignatureCanvas
+                      ref={signatureRef}
+                      onEnd={handleSignatureEnd}
+                      canvasProps={{
+                        width: 300,
+                        height: 120,
+                        className: 'signature-canvas w-full h-full border border-gray-200 rounded-md',
+                        style: { width: '100%', height: '120px' }
+                      }}
+                    />
+                    <p className="text-xs text-gray-500 mt-1 text-center">
+                      Supervisor signature for work completion approval
+                    </p>
+                  </div>
+                )}
                 
                 {jobCardFormData.supervisor_signature && (
                   <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-md">
