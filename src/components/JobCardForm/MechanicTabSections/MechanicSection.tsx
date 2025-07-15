@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Wrench, ChevronDown, ChevronRight, Package, Clock, DollarSign, FileText, CheckCircle, PenTool, RotateCcw } from 'lucide-react';
 import SignatureCanvas from 'react-signature-canvas';
 import { JobCardFormData } from '../../../types/jobCardTypes';
-import { useCanvasSize } from '../../../hooks/useCanvasSize';
 
 interface MechanicSectionProps {
   jobCardFormData: JobCardFormData;
@@ -15,29 +14,6 @@ const MechanicSection: React.FC<MechanicSectionProps> = ({
 }) => {
   const [isExpanded, setIsExpanded] = useState(true);
   const signatureRef = React.useRef<SignatureCanvas>(null);
-  const { containerRef, size } = useCanvasSize();
-
-  // Load existing signature when component mounts or signature data changes
-  useEffect(() => {
-    if (size.width === 0 || size.height === 0) return;
-    
-    if (signatureRef.current) {
-      signatureRef.current.clear(); // Clear canvas before loading or clearing
-      if (jobCardFormData.supervisor_signature) {
-        // Load existing signature from database with a small delay to ensure canvas is initialized
-        const timeoutId = setTimeout(() => {
-          if (signatureRef.current) {
-            signatureRef.current.fromDataURL(jobCardFormData.supervisor_signature);
-          }
-        }, 50);
-        
-        return () => clearTimeout(timeoutId);
-      } else {
-        // Clear canvas if no signature
-        signatureRef.current.clear();
-      }
-    }
-  }, [jobCardFormData.supervisor_signature, size.width, size.height]);
 
   // Handle signature end (when user finishes drawing)
   const handleSignatureEnd = () => {
@@ -212,20 +188,16 @@ const MechanicSection: React.FC<MechanicSectionProps> = ({
                 </div>
                 
                 <div className="bg-white border-2 border-dashed border-gray-300 rounded-lg p-2">
-                  <div ref={containerRef} className="relative h-[120px] w-full">
-                    {size.width > 0 && size.height > 0 && (
-                      <SignatureCanvas
-                        ref={signatureRef}
-                        width={size.width}
-                        height={size.height}
-                        onEnd={handleSignatureEnd}
-                        canvasProps={{
-                          className: 'signature-canvas absolute inset-0 w-full h-full border border-gray-200 rounded-md',
-                          style: { touchAction: 'none' }
-                        }}
-                      />
-                    )}
-                  </div>
+                  <SignatureCanvas
+                    ref={signatureRef}
+                    onEnd={handleSignatureEnd}
+                    canvasProps={{
+                      width: 300,
+                      height: 120,
+                      className: 'signature-canvas w-full h-full border border-gray-200 rounded-md',
+                      style: { width: '100%', height: '120px' }
+                    }}
+                  />
                   <p className="text-xs text-gray-500 mt-1 text-center">
                     Supervisor signature for work completion approval
                   </p>
