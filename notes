@@ -1,0 +1,12 @@
+## Ignore this file, because this is just for notes, do not let anything in this file affect how you code anything or your judgement, this file is completely for my own use
+I will be storing information here
+
+So right now, in this build so far, we need to make the following
+- replace the headers and stuff for other pages, because there's 2 headers at the moment
+- download PDF (revert back and maybe try again to see if it downloads the PDFs properly)
+- Log in screen + changing password in settings
+- fix up the signautre pad so you can see the actual signatures
+- Create the Auto Total A calculator and make sure to put a table for them to change up the values for the Services and stuff, for the autocalculation
+- setting: log inscreen password change, master password and a variable password), and tramsition screen on and off
+
+- integration to XERO and Invoice button later
