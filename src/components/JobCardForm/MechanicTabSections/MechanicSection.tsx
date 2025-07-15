@@ -24,8 +24,14 @@ const MechanicSection: React.FC<MechanicSectionProps> = ({
     if (signatureRef.current) {
       signatureRef.current.clear(); // Clear canvas before loading or clearing
       if (jobCardFormData.supervisor_signature) {
-        // Load existing signature from database
-        signatureRef.current.fromDataURL(jobCardFormData.supervisor_signature);
+        // Load existing signature from database with a small delay to ensure canvas is initialized
+        const timeoutId = setTimeout(() => {
+          if (signatureRef.current) {
+            signatureRef.current.fromDataURL(jobCardFormData.supervisor_signature);
+          }
+        }, 50);
+        
+        return () => clearTimeout(timeoutId);
       } else {
         // Clear canvas if no signature
         signatureRef.current.clear();

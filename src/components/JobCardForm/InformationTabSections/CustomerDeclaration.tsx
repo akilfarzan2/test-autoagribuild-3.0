@@ -28,8 +28,14 @@ const CustomerDeclaration: React.FC<CustomerDeclarationProps> = ({
     if (signatureRef.current) {
       signatureRef.current.clear(); // Clear canvas before loading or clearing
       if (jobCardFormData.customer_signature) {
-        // Load existing signature from database
-        signatureRef.current.fromDataURL(jobCardFormData.customer_signature);
+        // Load existing signature from database with a small delay to ensure canvas is initialized
+        const timeoutId = setTimeout(() => {
+          if (signatureRef.current) {
+            signatureRef.current.fromDataURL(jobCardFormData.customer_signature);
+          }
+        }, 50);
+        
+        return () => clearTimeout(timeoutId);
       } else {
         // Clear canvas if no signature
         signatureRef.current.clear();
