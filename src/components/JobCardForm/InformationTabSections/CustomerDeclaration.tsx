@@ -1,29 +1,60 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { FileCheck, ChevronDown, ChevronRight, PenTool, RotateCcw } from 'lucide-react';
 import SignatureCanvas from 'react-signature-canvas';
+import { SignatureCanvasRef } from '../../../types/jobCardTypes';
 
 interface JobCardFormData {
   customer_declaration_authorized: boolean;
-  customer_signature: string;
 }
 
 interface CustomerDeclarationProps {
   jobCardFormData: JobCardFormData;
-  onJobCardDataChange: (field: keyof JobCardFormData, value: string | boolean) => void;
+  onJobCardDataChange: (field: keyof JobCardFormData, value: boolean) => void;
+  initialCustomerSignature: string | null;
 }
 
-const CustomerDeclaration: React.FC<CustomerDeclarationProps> = ({
+const CustomerDeclaration = forwardRef<SignatureCanvasRef, CustomerDeclarationProps>(({
   jobCardFormData,
-  onJobCardDataChange
-}) => {
+  onJobCardDataChange,
+  initialCustomerSignature
+}, ref) => {
   const [isExpanded, setIsExpanded] = useState(true);
+  const [hasSignature, setHasSignature] = useState(false);
   const signatureRef = useRef<SignatureCanvas>(null);
 
-  // Handle signature end (when user finishes drawing)
+  // Load initial signature data when component mounts or initialCustomerSignature changes
+  useEffect(() => {
+    if (initialCustomerSignature && signatureRef.current) {
+      try {
+        signatureRef.current.fromDataURL(initialCustomerSignature);
+        setHasSignature(true);
+      } catch (error) {
+        console.error('Error loading initial customer signature:', error);
+      }
+    }
+  }, [initialCustomerSignature]);
+
+  // Expose methods to parent component
+  useImperativeHandle(ref, () => ({
+    getSignatureData: () => {
+      if (signatureRef.current) {
+        return signatureRef.current.toDataURL();
+      }
+      return '';
+    },
+    clearCanvas: () => {
+      if (signatureRef.current) {
+        signatureRef.current.clear();
+        setHasSignature(false);
+      }
+    }
+  }));
+
+  // Handle signature drawing (only update local state, not parent form)
   const handleSignatureEnd = () => {
     if (signatureRef.current) {
-      const signatureData = signatureRef.current.toDataURL();
-      onJobCardDataChange('customer_signature', signatureData);
+      const isEmpty = signatureRef.current.isEmpty();
+      setHasSignature(!isEmpty);
     }
   };
 
@@ -31,7 +62,7 @@ const CustomerDeclaration: React.FC<CustomerDeclarationProps> = ({
   const clearSignature = () => {
     if (signatureRef.current) {
       signatureRef.current.clear();
-      onJobCardDataChange('customer_signature', '');
+      setHasSignature(false);
     }
   };
 
@@ -115,7 +146,7 @@ const CustomerDeclaration: React.FC<CustomerDeclarationProps> = ({
                 </p>
               </div>
               
-              {jobCardFormData.customer_signature && (
+              {hasSignature && (
                 <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-md">
                   <p className="text-sm text-green-700 flex items-center">
                     <FileCheck className="w-4 h-4 mr-2" />
@@ -138,6 +169,8 @@ const CustomerDeclaration: React.FC<CustomerDeclarationProps> = ({
       )}
     </div>
   );
-};
+});
+
+CustomerDeclaration.displayName = 'CustomerDeclaration';
 
 export default CustomerDeclaration;

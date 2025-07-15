@@ -1,25 +1,56 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { Wrench, ChevronDown, ChevronRight, Package, Clock, DollarSign, FileText, CheckCircle, PenTool, RotateCcw } from 'lucide-react';
 import SignatureCanvas from 'react-signature-canvas';
-import { JobCardFormData } from '../../../types/jobCardTypes';
+import { JobCardFormData, SignatureCanvasRef } from '../../../types/jobCardTypes';
 
 interface MechanicSectionProps {
   jobCardFormData: JobCardFormData;
   onJobCardDataChange: (field: keyof JobCardFormData, value: string | boolean) => void;
+  initialSupervisorSignature: string | null;
 }
 
-const MechanicSection: React.FC<MechanicSectionProps> = ({ 
+const MechanicSection = forwardRef<SignatureCanvasRef, MechanicSectionProps>(({ 
   jobCardFormData, 
-  onJobCardDataChange 
-}) => {
+  onJobCardDataChange,
+  initialSupervisorSignature
+}, ref) => {
   const [isExpanded, setIsExpanded] = useState(true);
-  const signatureRef = React.useRef<SignatureCanvas>(null);
+  const [hasSignature, setHasSignature] = useState(false);
+  const signatureRef = useRef<SignatureCanvas>(null);
 
-  // Handle signature end (when user finishes drawing)
+  // Load initial signature data when component mounts or initialSupervisorSignature changes
+  useEffect(() => {
+    if (initialSupervisorSignature && signatureRef.current) {
+      try {
+        signatureRef.current.fromDataURL(initialSupervisorSignature);
+        setHasSignature(true);
+      } catch (error) {
+        console.error('Error loading initial supervisor signature:', error);
+      }
+    }
+  }, [initialSupervisorSignature]);
+
+  // Expose methods to parent component
+  useImperativeHandle(ref, () => ({
+    getSignatureData: () => {
+      if (signatureRef.current) {
+        return signatureRef.current.toDataURL();
+      }
+      return '';
+    },
+    clearCanvas: () => {
+      if (signatureRef.current) {
+        signatureRef.current.clear();
+        setHasSignature(false);
+      }
+    }
+  }));
+
+  // Handle signature drawing (only update local state, not parent form)
   const handleSignatureEnd = () => {
     if (signatureRef.current) {
-      const signatureData = signatureRef.current.toDataURL();
-      onJobCardDataChange('supervisor_signature', signatureData);
+      const isEmpty = signatureRef.current.isEmpty();
+      setHasSignature(!isEmpty);
     }
   };
 
@@ -27,7 +58,7 @@ const MechanicSection: React.FC<MechanicSectionProps> = ({
   const clearSignature = () => {
     if (signatureRef.current) {
       signatureRef.current.clear();
-      onJobCardDataChange('supervisor_signature', '');
+      setHasSignature(false);
     }
   };
 
@@ -203,7 +234,7 @@ const MechanicSection: React.FC<MechanicSectionProps> = ({
                   </p>
                 </div>
                 
-                {jobCardFormData.supervisor_signature && (
+                {hasSignature && (
                   <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-md">
                     <p className="text-xs text-green-700 flex items-center">
                       <CheckCircle className="w-3 h-3 mr-1" />
@@ -218,6 +249,8 @@ const MechanicSection: React.FC<MechanicSectionProps> = ({
       )}
     </div>
   );
-};
+});
+
+MechanicSection.displayName = 'MechanicSection';
 
 export default MechanicSection;

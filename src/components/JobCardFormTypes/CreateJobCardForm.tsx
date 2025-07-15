@@ -3,7 +3,7 @@ import { X, FileText, RefreshCw } from 'lucide-react';
 import InformationTab from '../JobCardForm/InformationTab';
 import Modal from '../Modal';
 import { supabase } from '../../utils/supabaseClient';
-import { JobCardFormData, ServiceTask } from '../../types/jobCardTypes';
+import { JobCardFormData, ServiceTask, SignatureCanvasRef } from '../../types/jobCardTypes';
 import { Customer } from '../../types/customerTypes';
 import { getAdelaideDateTimeForInput } from '../../utils/dateUtils';
 import { SERVICE_A_TASKS } from '../JobCardForm/InformationTabSections/VehicleDetailsTaskLists/ServiceATaskList';
@@ -11,6 +11,7 @@ import { SERVICE_B_TASKS } from '../JobCardForm/InformationTabSections/VehicleDe
 import { SERVICE_C_TASKS } from '../JobCardForm/InformationTabSections/VehicleDetailsTaskLists/ServiceCTaskList';
 import { SERVICE_D_TASKS } from '../JobCardForm/InformationTabSections/VehicleDetailsTaskLists/ServiceDTaskList';
 import { TRAILER_TASK_SECTIONS } from '../JobCardForm/InformationTabSections/VehicleDetailsTaskLists/TrailerTaskList';
+import CustomerDeclaration from '../JobCardForm/InformationTabSections/CustomerDeclaration';
 
 // Default form data structure
 const defaultJobCardFormData: JobCardFormData = {
@@ -73,6 +74,9 @@ const CreateJobCardForm: React.FC<CreateJobCardFormProps> = ({ isOpen, onClose, 
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [modalContent, setModalContent] = useState({ title: '', message: '', type: 'success' as 'success' | 'error' });
   const [jobCardFormData, setJobCardFormData] = useState<JobCardFormData>(defaultJobCardFormData);
+  
+  // Refs for signature components
+  const customerDeclarationRef = React.useRef<SignatureCanvasRef>(null);
 
   // Generate next job number sequence for given year and month
   const generateNextJobNumber = async (year: string, month: string) => {
@@ -314,6 +318,9 @@ const CreateJobCardForm: React.FC<CreateJobCardFormProps> = ({ isOpen, onClose, 
 
   const handleSubmitJobCard = async () => {
     try {
+      // Get signature data from signature components
+      const customerSignature = customerDeclarationRef.current?.getSignatureData() || '';
+      
       // Prepare data for database insertion
       const jobCardData = {
         job_number: `JC-${jobCardFormData.job_year}-${jobCardFormData.job_month}-${jobCardFormData.job_sequence}`,
@@ -342,7 +349,7 @@ const CreateJobCardForm: React.FC<CreateJobCardFormProps> = ({ isOpen, onClose, 
         assigned_worker: jobCardFormData.assigned_worker || null,
         assigned_parts: jobCardFormData.assigned_parts || null,
         customer_declaration_authorized: jobCardFormData.customer_declaration_authorized,
-        customer_signature: jobCardFormData.customer_signature || null,
+        customer_signature: customerSignature || null,
         service_progress: jobCardFormData.service_progress || null,
         trailer_progress: jobCardFormData.trailer_progress || null,
         other_progress: jobCardFormData.other_progress || null,
@@ -362,7 +369,7 @@ const CreateJobCardForm: React.FC<CreateJobCardFormProps> = ({ isOpen, onClose, 
         image_back: jobCardFormData.image_back || null,
         image_right_side: jobCardFormData.image_right_side || null,
         image_left_side: jobCardFormData.image_left_side || null,
-        supervisor_signature: jobCardFormData.supervisor_signature || null,
+        supervisor_signature: null, // Not available in create form
         grand_total: jobCardFormData.grand_total ? parseFloat(jobCardFormData.grand_total) : 0.00,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -451,6 +458,7 @@ const CreateJobCardForm: React.FC<CreateJobCardFormProps> = ({ isOpen, onClose, 
         {/* Content */}
         <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
           <InformationTab 
+            ref={customerDeclarationRef}
             jobCardFormData={jobCardFormData}
             onJobCardDataChange={handleJobCardDataChange}
             generateNextJobNumber={generateNextJobNumber}

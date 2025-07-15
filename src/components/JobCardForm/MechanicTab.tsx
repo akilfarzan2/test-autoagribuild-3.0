@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { forwardRef } from 'react';
 import { Wrench, User, Clock, CheckCircle } from 'lucide-react';
-import { JobCardFormData, ServiceTask } from '../../types/jobCardTypes';
+import { JobCardFormData, ServiceTask, SignatureCanvasRef } from '../../types/jobCardTypes';
 import ServiceATaskList from './InformationTabSections/VehicleDetailsTaskLists/ServiceATaskList';
 import ServiceBTaskList from './InformationTabSections/VehicleDetailsTaskLists/ServiceBTaskList';
 import ServiceCTaskList from './InformationTabSections/VehicleDetailsTaskLists/ServiceCTaskList';
@@ -15,10 +15,10 @@ interface MechanicTabProps {
   onJobCardDataChange: (field: keyof JobCardFormData, value: string | string[] | boolean | ServiceTask[] | null) => void;
 }
 
-const MechanicTab: React.FC<MechanicTabProps> = ({ 
+const MechanicTab = forwardRef<SignatureCanvasRef, MechanicTabProps>(({ 
   jobCardFormData, 
   onJobCardDataChange 
-}) => {
+}, ref) => {
   return (
     <div className="space-y-6 animate-fadeIn">
       {/* Header */}
@@ -101,8 +101,10 @@ const MechanicTab: React.FC<MechanicTabProps> = ({
       {/* Mechanic Section - Always visible */}
       <div className="mt-6">
         <MechanicSection 
+          ref={ref}
           jobCardFormData={jobCardFormData}
           onJobCardDataChange={onJobCardDataChange}
+          initialSupervisorSignature={jobCardFormData.supervisor_signature}
         />
       </div>
 
@@ -124,6 +126,8 @@ const MechanicTab: React.FC<MechanicTabProps> = ({
       </div>
     </div>
   );
-};
+});
+
+MechanicTab.displayName = 'MechanicTab';
 
 export default MechanicTab;
