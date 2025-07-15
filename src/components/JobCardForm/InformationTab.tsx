@@ -1,10 +1,10 @@
-import React, { forwardRef } from 'react';
+import React from 'react';
 import JobInformation from './InformationTabSections/JobInformation';
 import CustomerDetails from './InformationTabSections/CustomerDetails';
 import VehicleDetails from './InformationTabSections/VehicleDetails';
 import Assignments from './InformationTabSections/Assignments';
 import CustomerDeclaration from './InformationTabSections/CustomerDeclaration';
-import { JobCardFormData, SignatureCanvasRef } from '../../types/jobCardTypes';
+import { JobCardFormData } from '../../types/jobCardTypes';
 
 interface InformationTabProps {
   jobCardFormData: JobCardFormData;
@@ -13,12 +13,12 @@ interface InformationTabProps {
   isGeneratingJobNumber?: boolean;
 }
 
-const InformationTab = forwardRef<SignatureCanvasRef, InformationTabProps>(({ 
+const InformationTab: React.FC<InformationTabProps> = ({ 
   jobCardFormData, 
   onJobCardDataChange,
   generateNextJobNumber,
   isGeneratingJobNumber = false
-}, ref) => {
+}) => {
   return (
     <div className="space-y-6">
       <JobInformation 
@@ -40,15 +40,11 @@ const InformationTab = forwardRef<SignatureCanvasRef, InformationTabProps>(({
         onJobCardDataChange={onJobCardDataChange}
       />
       <CustomerDeclaration 
-        ref={ref}
         jobCardFormData={jobCardFormData}
         onJobCardDataChange={onJobCardDataChange}
-        initialCustomerSignature={jobCardFormData.customer_signature}
       />
     </div>
   );
-});
-
-InformationTab.displayName = 'InformationTab';
+};
 
 export default InformationTab;

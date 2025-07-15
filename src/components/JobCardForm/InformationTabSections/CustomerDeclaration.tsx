@@ -1,89 +1,29 @@
-import React, { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
+import React, { useState, useRef } from 'react';
 import { FileCheck, ChevronDown, ChevronRight, PenTool, RotateCcw } from 'lucide-react';
 import SignatureCanvas from 'react-signature-canvas';
-import { SignatureCanvasRef } from '../../../types/jobCardTypes';
 
 interface JobCardFormData {
   customer_declaration_authorized: boolean;
+  customer_signature: string;
 }
 
 interface CustomerDeclarationProps {
   jobCardFormData: JobCardFormData;
-  onJobCardDataChange: (field: keyof JobCardFormData, value: boolean) => void;
-  initialCustomerSignature: string | null;
+  onJobCardDataChange: (field: keyof JobCardFormData, value: string | boolean) => void;
 }
 
-const CustomerDeclaration = forwardRef<SignatureCanvasRef, CustomerDeclarationProps>(({
+const CustomerDeclaration: React.FC<CustomerDeclarationProps> = ({
   jobCardFormData,
-  onJobCardDataChange,
-  initialCustomerSignature
-}, ref) => {
+  onJobCardDataChange
+}) => {
   const [isExpanded, setIsExpanded] = useState(true);
-  const [hasSignature, setHasSignature] = useState(false);
-  const [canvasWidth, setCanvasWidth] = useState(500);
-  const [canvasHeight, setCanvasHeight] = useState(200);
   const signatureRef = useRef<SignatureCanvas>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
 
-  // Function to measure and set canvas dimensions
-  const updateCanvasDimensions = () => {
-    if (containerRef.current) {
-      const containerWidth = containerRef.current.offsetWidth;
-      setCanvasWidth(containerWidth);
-      setCanvasHeight(200); // Keep height fixed at 200px
-    }
-  };
-
-  // Set up canvas dimensions on mount and window resize
-  useEffect(() => {
-    updateCanvasDimensions();
-    
-    const handleResize = () => {
-      updateCanvasDimensions();
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  // Load initial signature data when canvas dimensions are ready
-  useEffect(() => {
-    if (initialCustomerSignature && signatureRef.current && canvasWidth > 0) {
-      try {
-        // Small delay to ensure canvas is fully rendered
-        setTimeout(() => {
-          if (signatureRef.current) {
-            signatureRef.current.fromDataURL(initialCustomerSignature);
-            setHasSignature(true);
-          }
-        }, 100);
-      } catch (error) {
-        console.error('Error loading initial customer signature:', error);
-      }
-    }
-  }, [initialCustomerSignature, canvasWidth]);
-
-  // Expose methods to parent component
-  useImperativeHandle(ref, () => ({
-    getSignatureData: () => {
-      if (signatureRef.current) {
-        return signatureRef.current.toDataURL();
-      }
-      return '';
-    },
-    clearCanvas: () => {
-      if (signatureRef.current) {
-        signatureRef.current.clear();
-        setHasSignature(false);
-      }
-    }
-  }));
-
-  // Handle signature drawing (only update local state, not parent form)
+  // Handle signature end (when user finishes drawing)
   const handleSignatureEnd = () => {
     if (signatureRef.current) {
-      const isEmpty = signatureRef.current.isEmpty();
-      setHasSignature(!isEmpty);
+      const signatureData = signatureRef.current.toDataURL();
+      onJobCardDataChange('customer_signature', signatureData);
     }
   };
 
@@ -91,7 +31,7 @@ const CustomerDeclaration = forwardRef<SignatureCanvasRef, CustomerDeclarationPr
   const clearSignature = () => {
     if (signatureRef.current) {
       signatureRef.current.clear();
-      setHasSignature(false);
+      onJobCardDataChange('customer_signature', '');
     }
   };
 
@@ -159,17 +99,14 @@ const CustomerDeclaration = forwardRef<SignatureCanvasRef, CustomerDeclarationPr
                 </button>
               </div>
               
-              <div 
-                ref={containerRef}
-                className="bg-white border-2 border-dashed border-gray-300 rounded-lg p-4"
-              >
+              <div className="bg-white border-2 border-dashed border-gray-300 rounded-lg p-4">
                 <SignatureCanvas
                   ref={signatureRef}
                   onEnd={handleSignatureEnd}
                   canvasProps={{
-                    width: canvasWidth,
-                    height: canvasHeight,
-                    className: 'signature-canvas w-full border border-gray-200 rounded-md',
+                    width: 500,
+                    height: 200,
+                    className: 'signature-canvas w-full h-full border border-gray-200 rounded-md',
                     style: { width: '100%', height: '200px' }
                   }}
                 />
@@ -178,7 +115,7 @@ const CustomerDeclaration = forwardRef<SignatureCanvasRef, CustomerDeclarationPr
                 </p>
               </div>
               
-              {hasSignature && (
+              {jobCardFormData.customer_signature && (
                 <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-md">
                   <p className="text-sm text-green-700 flex items-center">
                     <FileCheck className="w-4 h-4 mr-2" />
@@ -201,8 +138,6 @@ const CustomerDeclaration = forwardRef<SignatureCanvasRef, CustomerDeclarationPr
       )}
     </div>
   );
-});
-
-CustomerDeclaration.displayName = 'CustomerDeclaration';
+};
 
 export default CustomerDeclaration;

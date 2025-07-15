@@ -6,7 +6,7 @@ import PartsTab from '../JobCardForm/PartsTab';
 import PaymentsTab from '../JobCardForm/PaymentsTab';
 import Modal from '../Modal';
 import { supabase } from '../../utils/supabaseClient';
-import { JobCard, JobCardFormData, ServiceTask, SignatureCanvasRef } from '../../types/jobCardTypes';
+import { JobCard, JobCardFormData, ServiceTask } from '../../types/jobCardTypes';
 import { getAdelaideDateTimeForInput } from '../../utils/dateUtils';
 import { SERVICE_A_TASKS } from '../JobCardForm/InformationTabSections/VehicleDetailsTaskLists/ServiceATaskList';
 import { SERVICE_B_TASKS } from '../JobCardForm/InformationTabSections/VehicleDetailsTaskLists/ServiceBTaskList';
@@ -72,10 +72,6 @@ const EditJobCardForm: React.FC<EditJobCardFormProps> = ({ isOpen, onClose, init
     service_progress: null,
     trailer_progress: null,
   });
-  
-  // Refs for signature components
-  const customerDeclarationRef = React.useRef<SignatureCanvasRef>(null);
-  const mechanicSectionRef = React.useRef<SignatureCanvasRef>(null);
 
   // Generate next job number sequence for given year and month
   const generateNextJobNumber = async (year: string, month: string) => {
@@ -429,10 +425,6 @@ const EditJobCardForm: React.FC<EditJobCardFormProps> = ({ isOpen, onClose, init
 
   const handleSubmitJobCard = async () => {
     try {
-      // Get signature data from signature components
-      const customerSignature = customerDeclarationRef.current?.getSignatureData() || '';
-      const supervisorSignature = mechanicSectionRef.current?.getSignatureData() || '';
-      
       // Prepare data for database update
       const jobCardData = {
         job_number: `JC-${jobCardFormData.job_year}-${jobCardFormData.job_month}-${jobCardFormData.job_sequence}`,
@@ -461,7 +453,7 @@ const EditJobCardForm: React.FC<EditJobCardFormProps> = ({ isOpen, onClose, init
         assigned_worker: jobCardFormData.assigned_worker || null,
         assigned_parts: jobCardFormData.assigned_parts || null,
         customer_declaration_authorized: jobCardFormData.customer_declaration_authorized,
-        customer_signature: customerSignature || null,
+        customer_signature: jobCardFormData.customer_signature || null,
         service_progress: jobCardFormData.service_progress || null,
         trailer_progress: jobCardFormData.trailer_progress || null,
         other_progress: jobCardFormData.other_progress || null,
@@ -481,7 +473,7 @@ const EditJobCardForm: React.FC<EditJobCardFormProps> = ({ isOpen, onClose, init
         image_back: jobCardFormData.image_back || null,
         image_right_side: jobCardFormData.image_right_side || null,
         image_left_side: jobCardFormData.image_left_side || null,
-        supervisor_signature: supervisorSignature || null,
+        supervisor_signature: jobCardFormData.supervisor_signature || null,
         grand_total: jobCardFormData.grand_total ? parseFloat(jobCardFormData.grand_total) : 0.00,
         updated_at: new Date().toISOString()
       };
@@ -630,7 +622,6 @@ const EditJobCardForm: React.FC<EditJobCardFormProps> = ({ isOpen, onClose, init
           <div className="p-6">
             {activeTab === 'information' && (!allowedTabs || allowedTabs.includes('information')) && (
               <InformationTab 
-                ref={customerDeclarationRef}
                 jobCardFormData={jobCardFormData}
                 onJobCardDataChange={handleJobCardDataChange}
                 generateNextJobNumber={generateNextJobNumber}
@@ -640,7 +631,6 @@ const EditJobCardForm: React.FC<EditJobCardFormProps> = ({ isOpen, onClose, init
             
             {activeTab === 'mechanic' && (!allowedTabs || allowedTabs.includes('mechanic')) && (
               <MechanicTab 
-                ref={mechanicSectionRef}
                 jobCardFormData={jobCardFormData}
                 onJobCardDataChange={handleJobCardDataChange}
               />

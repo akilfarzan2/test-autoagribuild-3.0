@@ -98,11 +98,6 @@ export interface LubricantsUsedData {
   total_c: number | null;
 }
 
-export interface SignatureCanvasRef {
-  getSignatureData: () => string;
-  clearCanvas: () => void;
-}
-
 export interface JobCardFormData {
   job_year: string;
   job_month: string;
