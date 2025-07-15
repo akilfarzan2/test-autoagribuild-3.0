@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { FileCheck, ChevronDown, ChevronRight, PenTool, RotateCcw } from 'lucide-react';
 import SignatureCanvas from 'react-signature-canvas';
 
@@ -18,6 +18,19 @@ const CustomerDeclaration: React.FC<CustomerDeclarationProps> = ({
 }) => {
   const [isExpanded, setIsExpanded] = useState(true);
   const signatureRef = useRef<SignatureCanvas>(null);
+
+  // Load existing signature when component mounts or signature data changes
+  useEffect(() => {
+    if (signatureRef.current) {
+      if (jobCardFormData.customer_signature) {
+        // Load existing signature from database
+        signatureRef.current.fromDataURL(jobCardFormData.customer_signature);
+      } else {
+        // Clear canvas if no signature
+        signatureRef.current.clear();
+      }
+    }
+  }, [jobCardFormData.customer_signature]);
 
   // Handle signature end (when user finishes drawing)
   const handleSignatureEnd = () => {
@@ -104,9 +117,7 @@ const CustomerDeclaration: React.FC<CustomerDeclarationProps> = ({
                   ref={signatureRef}
                   onEnd={handleSignatureEnd}
                   canvasProps={{
-                    width: 500,
-                    height: 200,
-                    className: 'signature-canvas w-full h-full border border-gray-200 rounded-md',
+                    className: 'signature-canvas w-full border border-gray-200 rounded-md',
                     style: { width: '100%', height: '200px' }
                   }}
                 />
