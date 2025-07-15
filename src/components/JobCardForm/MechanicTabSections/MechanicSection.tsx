@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Wrench, ChevronDown, ChevronRight, Package, Clock, DollarSign, FileText, CheckCircle, PenTool, RotateCcw } from 'lucide-react';
+import { Wrench, ChevronDown, ChevronRight, Package, Clock, DollarSign, FileText, CheckCircle, PenTool, RotateCcw, Edit } from 'lucide-react';
 import SignatureCanvas from 'react-signature-canvas';
+import Modal from '../../Modal';
 import { JobCardFormData } from '../../../types/jobCardTypes';
 
 interface MechanicSectionProps {
@@ -13,13 +14,29 @@ const MechanicSection: React.FC<MechanicSectionProps> = ({
   onJobCardDataChange 
 }) => {
   const [isExpanded, setIsExpanded] = useState(true);
+  const [isSupervisorSignatureEditing, setIsSupervisorSignatureEditing] = useState(false);
+  const [showConfirmClearModal, setShowConfirmClearModal] = useState(false);
+  const [confirmModalContent, setConfirmModalContent] = useState({ title: '', message: '' });
   const signatureRef = React.useRef<SignatureCanvas>(null);
 
+  // Load existing signature when component mounts or signature data changes
+  React.useEffect(() => {
+    if (signatureRef.current) {
+      if (jobCardFormData.supervisor_signature && !isSupervisorSignatureEditing) {
+        // Load existing signature
+        signatureRef.current.fromDataURL(jobCardFormData.supervisor_signature);
+      } else if (!jobCardFormData.supervisor_signature && !isSupervisorSignatureEditing) {
+        // Clear canvas if no signature
+        signatureRef.current.clear();
+      }
+    }
+  }, [jobCardFormData.supervisor_signature, isSupervisorSignatureEditing]);
   // Handle signature end (when user finishes drawing)
   const handleSignatureEnd = () => {
     if (signatureRef.current) {
       const signatureData = signatureRef.current.toDataURL();
       onJobCardDataChange('supervisor_signature', signatureData);
+      setIsSupervisorSignatureEditing(false); // Lock the canvas after signing
     }
   };
 
@@ -28,10 +45,28 @@ const MechanicSection: React.FC<MechanicSectionProps> = ({
     if (signatureRef.current) {
       signatureRef.current.clear();
       onJobCardDataChange('supervisor_signature', '');
+      setIsSupervisorSignatureEditing(true); // Enable editing mode
     }
   };
 
+  // Handle edit signature button click
+  const handleEditSignature = () => {
+    setConfirmModalContent({
+      title: 'Edit Supervisor Signature',
+      message: 'Are you sure you want to edit the supervisor signature? This will clear the current signature and you will need to capture it again.'
+    });
+    setShowConfirmClearModal(true);
+  };
+
+  // Handle confirmation modal close
+  const handleConfirmModalClose = (confirmed: boolean) => {
+    if (confirmed) {
+      clearSignature();
+    }
+    setShowConfirmClearModal(false);
+  };
   return (
+    <>
     <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
@@ -177,30 +212,50 @@ const MechanicSection: React.FC<MechanicSectionProps> = ({
                     <PenTool className="w-4 h-4 inline mr-1" />
                     Supervisor Signature
                   </label>
-                  <button
-                    type="button"
-                    onClick={clearSignature}
-                    className="flex items-center px-2 py-1 text-xs text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors duration-200"
-                  >
-                    <RotateCcw className="w-3 h-3 mr-1" />
-                    Clear
-                  </button>
+                  {jobCardFormData.supervisor_signature && !isSupervisorSignatureEditing ? (
+                    <button
+                      type="button"
+                      onClick={handleEditSignature}
+                      className="flex items-center px-2 py-1 text-xs text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors duration-200"
+                    >
+                      <Edit className="w-3 h-3 mr-1" />
+                      Edit
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={clearSignature}
+                      className="flex items-center px-2 py-1 text-xs text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors duration-200"
+                    >
+                      <RotateCcw className="w-3 h-3 mr-1" />
+                      Clear
+                    </button>
+                  )}
                 </div>
                 
                 <div className="bg-white border-2 border-dashed border-gray-300 rounded-lg p-2">
                   <SignatureCanvas
                     ref={signatureRef}
-                    onEnd={handleSignatureEnd}
+                    readOnly={!isSupervisorSignatureEditing && !!jobCardFormData.supervisor_signature}
+                    onEnd={isSupervisorSignatureEditing ? handleSignatureEnd : undefined}
                     canvasProps={{
                       width: 300,
                       height: 120,
-                      className: 'signature-canvas w-full h-full border border-gray-200 rounded-md',
+                      className: `signature-canvas w-full h-full border border-gray-200 rounded-md ${
+                        !isSupervisorSignatureEditing && jobCardFormData.supervisor_signature ? 'cursor-default' : 'cursor-crosshair'
+                      }`,
                       style: { width: '100%', height: '120px' }
                     }}
                   />
-                  <p className="text-xs text-gray-500 mt-1 text-center">
-                    Supervisor signature for work completion approval
-                  </p>
+                  {isSupervisorSignatureEditing || !jobCardFormData.supervisor_signature ? (
+                    <p className="text-xs text-gray-500 mt-1 text-center">
+                      Supervisor signature for work completion approval
+                    </p>
+                  ) : (
+                    <p className="text-xs text-green-600 mt-1 text-center font-medium">
+                      Signature captured - Click "Edit" to modify
+                    </p>
+                  )}
                 </div>
                 
                 {jobCardFormData.supervisor_signature && (
@@ -217,6 +272,31 @@ const MechanicSection: React.FC<MechanicSectionProps> = ({
         </div>
       )}
     </div>
+
+    {/* Confirmation Modal */}
+    <Modal
+      isOpen={showConfirmClearModal}
+      onClose={() => handleConfirmModalClose(false)}
+      title={confirmModalContent.title}
+      message={confirmModalContent.message}
+      type="info"
+    >
+      <div className="flex space-x-3">
+        <button
+          onClick={() => handleConfirmModalClose(false)}
+          className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-200"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={() => handleConfirmModalClose(true)}
+          className="flex-1 px-4 py-2 bg-blue-600 text-white font-medium rounded-lg transition-all duration-200 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-500 focus:ring-opacity-50"
+        >
+          Confirm
+        </button>
+      </div>
+    </Modal>
+    </>
   );
 };
 
