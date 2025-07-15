@@ -27,8 +27,9 @@ const MechanicSection: React.FC<MechanicSectionProps> = ({
   const clearSignature = () => {
     if (signatureRef.current) {
       signatureRef.current.clear();
-      onJobCardDataChange('supervisor_signature', '');
     }
+    setHasSignature(false);
+    onJobCardDataChange('supervisor_signature', '');
   };
 
   return (
@@ -188,22 +189,37 @@ const MechanicSection: React.FC<MechanicSectionProps> = ({
                 </div>
                 
                 <div className="bg-white border-2 border-dashed border-gray-300 rounded-lg p-2">
-                  <SignatureCanvas
-                    ref={signatureRef}
-                    onEnd={handleSignatureEnd}
-                    canvasProps={{
-                      width: 300,
-                      height: 120,
-                      className: 'signature-canvas w-full h-full border border-gray-200 rounded-md',
-                      style: { width: '100%', height: '120px' }
-                    }}
-                  />
-                  <p className="text-xs text-gray-500 mt-1 text-center">
-                    Supervisor signature for work completion approval
-                  </p>
+                  {jobCardFormData.supervisor_signature ? (
+                    // Display saved signature as image
+                    <div className="w-full h-[120px] flex items-center justify-center bg-white border border-gray-200 rounded-md">
+                      <img
+                        src={jobCardFormData.supervisor_signature}
+                        alt="Supervisor Signature"
+                        className="max-w-full max-h-full object-contain"
+                        style={{ maxHeight: '120px' }}
+                      />
+                    </div>
+                  ) : (
+                    // Show signature canvas for new signature
+                    <>
+                      <SignatureCanvas
+                        ref={signatureRef}
+                        onEnd={handleSignatureEnd}
+                        canvasProps={{
+                          width: canvasWidth,
+                          height: canvasHeight,
+                          className: 'signature-canvas w-full h-full border border-gray-200 rounded-md',
+                          style: { width: '100%', height: '120px' }
+                        }}
+                      />
+                      <p className="text-xs text-gray-500 mt-1 text-center">
+                        Supervisor signature for work completion approval
+                      </p>
+                    </>
+                  )}
                 </div>
                 
-                {jobCardFormData.supervisor_signature && (
+                {(hasSignature || jobCardFormData.supervisor_signature) && (
                   <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-md">
                     <p className="text-xs text-green-700 flex items-center">
                       <CheckCircle className="w-3 h-3 mr-1" />

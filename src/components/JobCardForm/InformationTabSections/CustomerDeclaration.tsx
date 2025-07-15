@@ -31,8 +31,9 @@ const CustomerDeclaration: React.FC<CustomerDeclarationProps> = ({
   const clearSignature = () => {
     if (signatureRef.current) {
       signatureRef.current.clear();
-      onJobCardDataChange('customer_signature', '');
     }
+    setHasSignature(false);
+    onJobCardDataChange('customer_signature', '');
   };
 
   // Handle authorization checkbox change
@@ -100,22 +101,37 @@ const CustomerDeclaration: React.FC<CustomerDeclarationProps> = ({
               </div>
               
               <div className="bg-white border-2 border-dashed border-gray-300 rounded-lg p-4">
-                <SignatureCanvas
-                  ref={signatureRef}
-                  onEnd={handleSignatureEnd}
-                  canvasProps={{
-                    width: 500,
-                    height: 200,
-                    className: 'signature-canvas w-full h-full border border-gray-200 rounded-md',
-                    style: { width: '100%', height: '200px' }
-                  }}
-                />
-                <p className="text-xs text-gray-500 mt-2 text-center">
-                  Please sign above using your mouse, trackpad, or touch screen
-                </p>
+                {jobCardFormData.customer_signature ? (
+                  // Display saved signature as image
+                  <div className="w-full h-[200px] flex items-center justify-center bg-white border border-gray-200 rounded-md">
+                    <img
+                      src={jobCardFormData.customer_signature}
+                      alt="Customer Signature"
+                      className="max-w-full max-h-full object-contain"
+                      style={{ maxHeight: '200px' }}
+                    />
+                  </div>
+                ) : (
+                  // Show signature canvas for new signature
+                  <>
+                    <SignatureCanvas
+                      ref={signatureRef}
+                      onEnd={handleSignatureEnd}
+                      canvasProps={{
+                        width: canvasWidth,
+                        height: canvasHeight,
+                        className: 'signature-canvas w-full h-full border border-gray-200 rounded-md',
+                        style: { width: '100%', height: '200px' }
+                      }}
+                    />
+                    <p className="text-xs text-gray-500 mt-2 text-center">
+                      Please sign above using your mouse, trackpad, or touch screen
+                    </p>
+                  </>
+                )}
               </div>
               
-              {jobCardFormData.customer_signature && (
+              {(hasSignature || jobCardFormData.customer_signature) && (
                 <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-md">
                   <p className="text-sm text-green-700 flex items-center">
                     <FileCheck className="w-4 h-4 mr-2" />
