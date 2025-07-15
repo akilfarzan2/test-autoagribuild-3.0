@@ -119,7 +119,7 @@ const CustomerDeclaration: React.FC<CustomerDeclarationProps> = ({
                   onEnd={handleSignatureEnd}
                   canvasProps={{
                     className: 'signature-canvas w-full border border-gray-200 rounded-md',
-                    style: { width: '100%', height: '200px' }
+                    style: { width: '100%', height: '200px', touchAction: 'none' }
                   }}
                 />
                 <p className="text-xs text-gray-500 mt-2 text-center">

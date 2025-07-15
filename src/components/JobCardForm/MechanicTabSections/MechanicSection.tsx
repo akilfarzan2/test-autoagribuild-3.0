@@ -207,7 +207,7 @@ const MechanicSection: React.FC<MechanicSectionProps> = ({
                     onEnd={handleSignatureEnd}
                     canvasProps={{
                       className: 'signature-canvas w-full border border-gray-200 rounded-md',
-                      style: { width: '100%', height: '120px' }
+                      style: { width: '100%', height: '120px', touchAction: 'none' }
                     }}
                   />
                   <p className="text-xs text-gray-500 mt-1 text-center">
