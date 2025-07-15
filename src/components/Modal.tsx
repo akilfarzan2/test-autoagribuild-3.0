@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
-import { CheckCircle, X, Info } from 'lucide-react';
+import { CheckCircle, X } from 'lucide-react';
 
 interface ModalProps {
   isOpen: boolean;
@@ -8,7 +8,6 @@ interface ModalProps {
   title: string;
   message: string;
   type?: 'success' | 'error' | 'info';
-  children?: React.ReactNode;
 }
 
 const Modal: React.FC<ModalProps> = ({ 
@@ -16,8 +15,7 @@ const Modal: React.FC<ModalProps> = ({
   onClose, 
   title, 
   message, 
-  type = 'success',
-  children
+  type = 'success' 
 }) => {
   if (!isOpen) return null;
 
@@ -34,12 +32,6 @@ const Modal: React.FC<ModalProps> = ({
           icon: <X className="w-12 h-12 text-red-500" />,
           titleColor: 'text-red-800',
           buttonColor: 'bg-red-600 hover:bg-red-700 focus:ring-red-500'
-        };
-      case 'info':
-        return {
-          icon: <Info className="w-12 h-12 text-blue-500" />,
-          titleColor: 'text-blue-800',
-          buttonColor: 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500'
         };
       default:
         return {
@@ -74,16 +66,12 @@ const Modal: React.FC<ModalProps> = ({
 
         {/* Footer */}
         <div className="p-6 border-t border-gray-100 flex-shrink-0">
-          {children ? (
-            children
-          ) : (
-            <button
-              onClick={onClose}
-              className={`w-full px-6 py-3 ${buttonColor} text-white font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-opacity-50 transform hover:scale-105 active:scale-95`}
-            >
-              OK
-            </button>
-          )}
+          <button
+            onClick={onClose}
+            className={`w-full px-6 py-3 ${buttonColor} text-white font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-opacity-50 transform hover:scale-105 active:scale-95`}
+          >
+            OK
+          </button>
         </div>
       </div>
     </div>

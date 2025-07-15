@@ -1,7 +1,6 @@
 import React, { useState, useRef } from 'react';
-import { FileCheck, ChevronDown, ChevronRight, PenTool, RotateCcw, Edit } from 'lucide-react';
+import { FileCheck, ChevronDown, ChevronRight, PenTool, RotateCcw } from 'lucide-react';
 import SignatureCanvas from 'react-signature-canvas';
-import Modal from '../../Modal';
 
 interface JobCardFormData {
   customer_declaration_authorized: boolean;
@@ -18,29 +17,13 @@ const CustomerDeclaration: React.FC<CustomerDeclarationProps> = ({
   onJobCardDataChange
 }) => {
   const [isExpanded, setIsExpanded] = useState(true);
-  const [isCustomerSignatureEditing, setIsCustomerSignatureEditing] = useState(false);
-  const [showConfirmClearModal, setShowConfirmClearModal] = useState(false);
-  const [confirmModalContent, setConfirmModalContent] = useState({ title: '', message: '' });
   const signatureRef = useRef<SignatureCanvas>(null);
 
-  // Load existing signature when component mounts or signature data changes
-  React.useEffect(() => {
-    if (signatureRef.current) {
-      if (jobCardFormData.customer_signature && !isCustomerSignatureEditing) {
-        // Load existing signature
-        signatureRef.current.fromDataURL(jobCardFormData.customer_signature);
-      } else if (!jobCardFormData.customer_signature && !isCustomerSignatureEditing) {
-        // Clear canvas if no signature
-        signatureRef.current.clear();
-      }
-    }
-  }, [jobCardFormData.customer_signature, isCustomerSignatureEditing]);
   // Handle signature end (when user finishes drawing)
   const handleSignatureEnd = () => {
     if (signatureRef.current) {
       const signatureData = signatureRef.current.toDataURL();
       onJobCardDataChange('customer_signature', signatureData);
-      setIsCustomerSignatureEditing(false); // Lock the canvas after signing
     }
   };
 
@@ -49,33 +32,15 @@ const CustomerDeclaration: React.FC<CustomerDeclarationProps> = ({
     if (signatureRef.current) {
       signatureRef.current.clear();
       onJobCardDataChange('customer_signature', '');
-      setIsCustomerSignatureEditing(true); // Enable editing mode
     }
   };
 
-  // Handle edit signature button click
-  const handleEditSignature = () => {
-    setConfirmModalContent({
-      title: 'Edit Customer Signature',
-      message: 'Are you sure you want to edit the customer signature? This will clear the current signature and you will need to capture it again.'
-    });
-    setShowConfirmClearModal(true);
-  };
-
-  // Handle confirmation modal close
-  const handleConfirmModalClose = (confirmed: boolean) => {
-    if (confirmed) {
-      clearSignature();
-    }
-    setShowConfirmClearModal(false);
-  };
   // Handle authorization checkbox change
   const handleAuthorizationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onJobCardDataChange('customer_declaration_authorized', e.target.checked);
   };
 
   return (
-    <>
     <div className="border border-gray-200 rounded-lg overflow-hidden">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
@@ -124,50 +89,30 @@ const CustomerDeclaration: React.FC<CustomerDeclarationProps> = ({
                   <PenTool className="w-5 h-5 mr-2 text-gray-600" />
                   Customer Signature
                 </h4>
-                {jobCardFormData.customer_signature && !isCustomerSignatureEditing ? (
-                  <button
-                    type="button"
-                    onClick={handleEditSignature}
-                    className="flex items-center px-3 py-1.5 text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors duration-200"
-                  >
-                    <Edit className="w-4 h-4 mr-1" />
-                    Edit
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={clearSignature}
-                    className="flex items-center px-3 py-1.5 text-sm text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors duration-200"
-                  >
-                    <RotateCcw className="w-4 h-4 mr-1" />
-                    Clear
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={clearSignature}
+                  className="flex items-center px-3 py-1.5 text-sm text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors duration-200"
+                >
+                  <RotateCcw className="w-4 h-4 mr-1" />
+                  Clear
+                </button>
               </div>
               
               <div className="bg-white border-2 border-dashed border-gray-300 rounded-lg p-4">
                 <SignatureCanvas
                   ref={signatureRef}
-                  readOnly={!isCustomerSignatureEditing && !!jobCardFormData.customer_signature}
-                  onEnd={isCustomerSignatureEditing ? handleSignatureEnd : undefined}
+                  onEnd={handleSignatureEnd}
                   canvasProps={{
                     width: 500,
                     height: 200,
-                    className: `signature-canvas w-full h-full border border-gray-200 rounded-md ${
-                      !isCustomerSignatureEditing && jobCardFormData.customer_signature ? 'cursor-default' : 'cursor-crosshair'
-                    }`,
+                    className: 'signature-canvas w-full h-full border border-gray-200 rounded-md',
                     style: { width: '100%', height: '200px' }
                   }}
                 />
-                {isCustomerSignatureEditing || !jobCardFormData.customer_signature ? (
-                  <p className="text-xs text-gray-500 mt-2 text-center">
-                    Please sign above using your mouse, trackpad, or touch screen
-                  </p>
-                ) : (
-                  <p className="text-xs text-green-600 mt-2 text-center font-medium">
-                    Signature captured - Click "Edit" to modify
-                  </p>
-                )}
+                <p className="text-xs text-gray-500 mt-2 text-center">
+                  Please sign above using your mouse, trackpad, or touch screen
+                </p>
               </div>
               
               {jobCardFormData.customer_signature && (
@@ -192,31 +137,6 @@ const CustomerDeclaration: React.FC<CustomerDeclarationProps> = ({
         </div>
       )}
     </div>
-
-    {/* Confirmation Modal */}
-    <Modal
-      isOpen={showConfirmClearModal}
-      onClose={() => handleConfirmModalClose(false)}
-      title={confirmModalContent.title}
-      message={confirmModalContent.message}
-      type="info"
-    >
-      <div className="flex space-x-3">
-        <button
-          onClick={() => handleConfirmModalClose(false)}
-          className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-200"
-        >
-          Cancel
-        </button>
-        <button
-          onClick={() => handleConfirmModalClose(true)}
-          className="flex-1 px-4 py-2 bg-blue-600 text-white font-medium rounded-lg transition-all duration-200 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-500 focus:ring-opacity-50"
-        >
-          Confirm
-        </button>
-      </div>
-    </Modal>
-    </>
   );
 };
 
