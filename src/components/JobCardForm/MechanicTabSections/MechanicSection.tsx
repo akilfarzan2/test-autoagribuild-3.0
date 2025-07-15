@@ -16,19 +16,48 @@ const MechanicSection = forwardRef<SignatureCanvasRef, MechanicSectionProps>(({
 }, ref) => {
   const [isExpanded, setIsExpanded] = useState(true);
   const [hasSignature, setHasSignature] = useState(false);
+  const [canvasWidth, setCanvasWidth] = useState(300);
+  const [canvasHeight, setCanvasHeight] = useState(120);
   const signatureRef = useRef<SignatureCanvas>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  // Load initial signature data when component mounts or initialSupervisorSignature changes
+  // Function to measure and set canvas dimensions
+  const updateCanvasDimensions = () => {
+    if (containerRef.current) {
+      const containerWidth = containerRef.current.offsetWidth;
+      setCanvasWidth(containerWidth);
+      setCanvasHeight(120); // Keep height fixed at 120px
+    }
+  };
+
+  // Set up canvas dimensions on mount and window resize
   useEffect(() => {
-    if (initialSupervisorSignature && signatureRef.current) {
+    updateCanvasDimensions();
+    
+    const handleResize = () => {
+      updateCanvasDimensions();
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Load initial signature data when canvas dimensions are ready
+  useEffect(() => {
+    if (initialSupervisorSignature && signatureRef.current && canvasWidth > 0) {
       try {
-        signatureRef.current.fromDataURL(initialSupervisorSignature);
-        setHasSignature(true);
+        // Small delay to ensure canvas is fully rendered
+        setTimeout(() => {
+          if (signatureRef.current) {
+            signatureRef.current.fromDataURL(initialSupervisorSignature);
+            setHasSignature(true);
+          }
+        }, 100);
       } catch (error) {
         console.error('Error loading initial supervisor signature:', error);
       }
     }
-  }, [initialSupervisorSignature]);
+  }, [initialSupervisorSignature, canvasWidth]);
 
   // Expose methods to parent component
   useImperativeHandle(ref, () => ({
@@ -218,14 +247,17 @@ const MechanicSection = forwardRef<SignatureCanvasRef, MechanicSectionProps>(({
                   </button>
                 </div>
                 
-                <div className="bg-white border-2 border-dashed border-gray-300 rounded-lg p-2">
+                <div 
+                  ref={containerRef}
+                  className="bg-white border-2 border-dashed border-gray-300 rounded-lg p-2"
+                >
                   <SignatureCanvas
                     ref={signatureRef}
                     onEnd={handleSignatureEnd}
                     canvasProps={{
-                      width: 300,
-                      height: 120,
-                      className: 'signature-canvas w-full h-full border border-gray-200 rounded-md',
+                      width: canvasWidth,
+                      height: canvasHeight,
+                      className: 'signature-canvas w-full border border-gray-200 rounded-md',
                       style: { width: '100%', height: '120px' }
                     }}
                   />
