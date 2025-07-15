@@ -22,6 +22,7 @@ const CustomerDeclaration: React.FC<CustomerDeclarationProps> = ({
   // Load existing signature when component mounts or signature data changes
   useEffect(() => {
     if (signatureRef.current) {
+      signatureRef.current.clear(); // Clear canvas before loading or clearing
       if (jobCardFormData.customer_signature) {
         // Load existing signature from database
         signatureRef.current.fromDataURL(jobCardFormData.customer_signature);
